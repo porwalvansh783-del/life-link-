@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LifeLink — Scroll Demo</title>
+<style>
+:root{--bg:#a30f24;--ink:#fff;--mut:#ffd3da;--cy:#5ff0ff;box-sizing:border-box;padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0}
+.vig{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 68% 50%,rgba(255,110,130,.28),transparent 55%),radial-gradient(circle at 50% 50%,transparent 55%,rgba(60,0,10,.55))}
+nav{position:fixed;top:0;left:0;right:0;z-index:5;display:flex;justify-content:space-between;align-items:center;padding:calc(18px + env(safe-area-inset-top,0px)) 5vw 18px}
+.logo{font-weight:800;letter-spacing:.12em;font-size:15px}.logo i{color:var(--cy);font-style:normal}
+nav ul{display:flex;gap:26px;list-style:none;margin:0;padding:0;font-size:13px}
+nav a{color:var(--mut);text-decoration:none}nav a:hover{color:#fff}
+.dots{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:5;display:flex;flex-direction:column;gap:12px}
+.dots b{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.35);transition:.3s}
+.dots b.on{background:#fff;transform:scale(1.5);box-shadow:0 0 12px #fff}
+section{position:relative;z-index:2;min-height:100vh;display:flex;align-items:center;padding:90px 6vw}
+.c{max-width:480px;opacity:0;transform:translateY(40px);transition:opacity .8s,transform .8s}
+section.in .c{opacity:1;transform:none}
+.tag{display:inline-block;font-size:11px;letter-spacing:.22em;color:var(--cy);border:1px solid rgba(95,240,255,.5);border-radius:99px;padding:6px 14px;margin-bottom:16px;background:rgba(0,0,0,.18)}
+h1,h2{margin:0 0 14px;font-size:clamp(34px,5.2vw,62px);line-height:1.04;letter-spacing:-.025em;font-weight:700}
+h2{font-size:clamp(30px,4.2vw,50px)}
+p{color:var(--mut);line-height:1.6;font-size:16px;margin:0 0 20px}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+.btn{border:0;cursor:pointer;padding:13px 24px;border-radius:99px;font-size:14px;font-weight:600;font-family:inherit;text-decoration:none}
+.p{background:#fff;color:#a30f24;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+.s{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.55)}
+.stats{display:flex;gap:26px;margin-top:8px}.stats div{font-size:12px;color:var(--mut)}.stats strong{display:block;font-size:28px;color:#fff}
+.chip{border:1px solid rgba(255,255,255,.5);background:rgba(0,0,0,.15);color:#fff;border-radius:12px;padding:10px 14px;font-weight:600;cursor:pointer;font-family:inherit}
+.chip.on{background:#fff;color:#a30f24}
+input,select{width:100%;padding:13px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.2);color:#fff;font-family:inherit;font-size:14px;margin-bottom:12px}
+input::placeholder{color:#ffc0ca}option{color:#000}
+.live{font-size:13px;color:var(--mut);margin-top:12px}.live:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#5dff9a;margin-right:8px;box-shadow:0 0 10px #5dff9a}
+ol,ul.l{padding:0;margin:0 0 20px;list-style:none;display:grid;gap:10px}
+ol li,ul.l li{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:12px 16px;font-size:14px;backdrop-filter:blur(6px)}
+ol{counter-reset:s}ol li:before{counter-increment:s;content:counter(s);display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#fff;color:#a30f24;font-weight:700;font-size:12px;margin-right:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.card{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:14px;font-size:13px}.card b{display:block;font-size:15px;margin-bottom:4px}
+.note{font-size:11px;color:#ffb3bf;margin-top:10px}
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,120px);background:#fff;color:#a30f24;padding:14px 22px;border-radius:14px;font-weight:600;font-size:14px;z-index:9;transition:.4s;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+#toast.on{transform:translate(-50%,0)}
+@media(max-width:760px){nav ul{display:none}section{align-items:flex-end;padding-bottom:7vh}.c{background:linear-gradient(to top,rgba(70,0,12,.88) 70%,transparent);padding:30px 18px 0;margin:0 -18px;max-width:none;width:calc(100% + 36px)}.dots{display:none}}
+.c{opacity:1;transform:none}
+.c>*{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+section.in .c>*{opacity:1;transform:none}
+section.in .c>:nth-child(2){transition-delay:.08s}section.in .c>:nth-child(3){transition-delay:.16s}section.in .c>:nth-child(4){transition-delay:.24s}section.in .c>:nth-child(5){transition-delay:.32s}section.in .c>:nth-child(6){transition-delay:.4s}section.in .c>:nth-child(n+7){transition-delay:.48s}
+.bar{position:fixed;top:0;left:0;height:3px;background:#fff;z-index:9;width:0;box-shadow:0 0 12px #fff}
+.ecg{width:260px;height:36px;display:block;margin:6px 0 14px}.ecg path{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-dasharray:330;stroke-dashoffset:330;animation:ecg 2.6s linear infinite;filter:drop-shadow(0 0 6px #fff)}
+@keyframes ecg{to{stroke-dashoffset:-330}}
+.btn{transition:transform .2s,box-shadow .3s}.btn:hover{box-shadow:0 10px 36px rgba(255,255,255,.35)}
+.card,.team div{transition:transform .3s,background .3s}.card:hover,.team div:hover{transform:translateY(-4px);background:rgba(255,255,255,.14)}
+.team{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}.team div{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:12px;font-size:12px;color:var(--mut)}.team b{display:block;color:#fff;font-size:14px}
+.av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#fff,#ffb3c0);color:#a30f24;display:grid;place-items:center;font-weight:700;margin-bottom:8px}
+details{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:12px 16px;margin-bottom:8px;font-size:14px}summary{cursor:pointer;font-weight:600}details p{margin:8px 0 0;font-size:14px}
+.q{font-style:italic;background:rgba(0,0,0,.2);border-radius:14px;padding:14px;margin-bottom:10px;font-size:14px}.q small{display:block;font-style:normal;color:var(--mut);margin-top:6px}
+h3{margin:22px 0 10px;font-size:18px}.foot{font-size:12px;color:var(--mut);margin-top:22px}.foot a{color:var(--mut);margin-right:12px;text-decoration:none}
+nav .btn{padding:9px 18px;font-size:12px}
+@media(min-width:761px){.wide{max-width:560px;background:rgba(70,0,14,.5);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.15);border-radius:22px;padding:28px}}
+h1,h2,h3,.logo,.stats strong{font-family:"Sora","Inter",system-ui,-apple-system,"Segoe UI",sans-serif}
+h1{font-size:clamp(34px,4.6vw,60px);line-height:1.12;letter-spacing:-.015em;margin-bottom:10px}
+h2{font-size:clamp(28px,3.6vw,46px);line-height:1.15;letter-spacing:-.012em}
+h1,h2,h3,p,.tag,li,.card{overflow-wrap:break-word;word-break:normal}
+.tag{line-height:1.35}
+section{padding:120px 6vw 80px}
+nav{background:linear-gradient(to bottom,rgba(70,0,12,.85),transparent)}
+nav ul{gap:20px}
+@media(max-width:1100px){nav ul{display:none}}
+@media(min-width:761px){.c{background:rgba(70,0,14,.38);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);border-radius:22px;padding:30px}.wide{max-width:580px}}
+@media(max-width:760px){section{padding:100px 6vw 6vh}h1{font-size:clamp(30px,9vw,40px)}h2{font-size:clamp(26px,7.4vw,34px)}}
+[hidden]{display:none!important}
+nav{z-index:8}.nr{display:flex;gap:10px;align-items:center}
+.burger{display:none;background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:10px;font-size:18px;padding:6px 12px;cursor:pointer}
+@media(max-width:1100px){.burger{display:block}nav ul{display:none;position:absolute;top:100%;left:5vw;right:5vw;flex-direction:column;background:rgba(58,0,12,.96);padding:18px 22px;border-radius:16px;gap:14px}nav.m ul{display:flex}}
+.page{position:fixed;inset:0;z-index:7;background:rgba(58,0,12,.92);backdrop-filter:blur(14px);overflow:auto;padding:100px 6vw 60px;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .35s,visibility .35s}
+.page.open{opacity:1;visibility:visible;pointer-events:auto}
+.page.open .pw{animation:up .6s both}@keyframes up{from{opacity:0;transform:translateY(24px)}}
+.pw{max-width:1000px;margin:0 auto}.pw.narrow{max-width:520px}
+.page h1{font-size:clamp(30px,4vw,48px)}.page h2{margin-top:44px}
+.x{background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:99px;padding:8px 16px;cursor:pointer;font-family:inherit;margin-bottom:18px}
+.g3,.g4{display:grid;gap:12px;margin:14px 0 8px}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:760px){.g3,.g4{grid-template-columns:1fr 1fr}}
+a.card{display:block;color:inherit;text-decoration:none}
+.st strong{font-family:"Sora",sans-serif;font-size:30px;display:block;margin-bottom:2px}
+.card small{display:block;color:var(--mut);margin-top:8px;font-size:12px}.card em{display:block;margin-top:8px;font-size:14px}
+textarea{width:100%;padding:13px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.2);color:#fff;font-family:inherit;font-size:14px;margin-bottom:12px;min-height:90px;resize:vertical}
+.chat{height:230px;overflow:auto;display:flex;flex-direction:column;gap:8px;background:rgba(0,0,0,.2);border-radius:14px;padding:12px;margin-bottom:10px}
+.msg{max-width:80%;padding:9px 13px;border-radius:14px;font-size:13px;background:rgba(255,255,255,.14)}.msg.u{align-self:flex-end;background:#fff;color:#a30f24}
+.sendrow{display:flex;gap:8px}.sendrow input{margin:0}
+.bc{width:90px;height:90px;border-radius:50%;margin:14px auto;background:radial-gradient(#fff,#ff8aa0);transition:transform 4s ease-in-out;transform:scale(.7);box-shadow:0 0 40px rgba(255,255,255,.5)}.bc.big{transform:scale(1.25)}
+.mood{display:flex;gap:10px;margin:10px 0}.mood button{font-size:26px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:14px;padding:6px 12px;cursor:pointer}
+.spark{width:100%;height:50px}.spark polyline{fill:none;stroke:#fff;stroke-width:2;stroke-linejoin:round}
+#logs{padding:0;list-style:none;display:grid;gap:6px;font-size:13px;margin-bottom:10px}#logs li{background:rgba(0,0,0,.2);border-radius:10px;padding:8px 12px}
+input[type=range]{padding:0;accent-color:#fff}
+.map{border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,.2);margin:10px 0}
+.map svg{display:block;width:100%;height:auto}
+.legal p{font-size:14px}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="vig"></div>
+<div class="bar"></div>
+<nav><a class="logo" href="#s0" style="color:#fff;text-decoration:none">LIFE<i>/</i>LINK</a><ul><li><a href="#s0">Home</a></li><li><a href="#about">About Us</a></li><li><a href="#services">Services</a></li><li><a href="#contact">Contact</a></li><li><a href="#join">Join us</a></li><li id="nav-mh" hidden><a href="#my-health">My Health</a></li></ul><div class="nr"><a class="btn p" href="#contact">Contact us</a><button class="burger" aria-label="Menu">☰</button></div></nav>
+<div class="dots"><b class="on"></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div>
+
+<section id="s0"><div class="c"><div class="tag">HOME · VISION</div><h1>Welcome to <br>LifeLink</h1><svg class="ecg" viewBox="0 0 260 36"><path d="M0 18H90l8-13 10 28 10-32 8 17H260"/></svg><p>Empowering your health journey with centralized data and seamless communication. Our vision: a world where nobody waits for blood, an organ or a diagnosis.</p><div class="row"><a class="btn p" href="#join">Get Started</a><a class="btn s" href="#s5">Learn more</a></div><div class="stats"><div><strong data-n="200" data-pre="+" data-suf="K">0</strong>users</div><div><strong data-n="500" data-suf="+">0</strong>partners</div><div><strong data-n="30" data-suf="+">0</strong>countries</div></div></div></section>
+
+<section id="s1"><div class="c"><div class="tag">EMERGENCY BLOOD</div><h2>Blood when seconds count.</h2><p>Pick the blood group, add your city and alert matching donors and blood banks nearby, then talk to them securely.</p><div class="row" id="groups"><button class="chip">A+</button><button class="chip">A-</button><button class="chip">B+</button><button class="chip">B-</button><button class="chip">AB+</button><button class="chip">AB-</button><button class="chip on">O+</button><button class="chip">O-</button></div><input id="city" placeholder="City or hospital"><select id="units"><option>1 unit</option><option>2 units</option><option>3+ units</option></select><button class="btn p" id="req">Request blood</button><div class="live">42 matching donors within 10 km (demo)</div></div></section>
+
+<section id="s2"><div class="c"><div class="tag">ORGAN DONATION · GUIDELINES</div><h2>Give life beyond life.</h2><p>One donor can save several lives. Your pledge lives in your centralized health record.</p><ol><li>Register your pledge online</li><li>Tell your family about your decision</li><li>Carry your digital donor card</li><li>Hospitals coordinate matching and transplant</li></ol><div class="row"><button class="btn p" id="pledge">Pledge now</button><button class="btn s" id="guide">Read guidelines</button></div><div class="note">Rules vary by country. Check your local transplant authority.</div></div></section>
+
+<section id="s3"><div class="c"><div class="tag">LABS · DIAGNOSTICS</div><h2>Tests without the queue.</h2><p>Book a sample pickup at home and get reports in your LifeLink account.</p><div class="grid"><div class="card"><b>Blood count</b>CBC, hemoglobin</div><div class="card"><b>Thyroid</b>T3, T4, TSH</div><div class="card"><b>Diabetes</b>HbA1c, glucose</div><div class="card"><b>Full body</b>80+ parameters</div></div><button class="btn p" id="lab">Book home collection</button></div></section>
+
+<section id="s4"><div class="c"><div class="tag">MEDICINES</div><h2>Medicines, delivered.</h2><p>Upload a prescription, compare prices, set dose reminders and refill in one tap.</p><div class="row"><button class="btn p" id="rx">Upload prescription</button><button class="btn s" id="rem">Set reminders</button></div><div class="note">LifeLink demo · not a medical service.</div></div></section>
+
+<section id="s5"><div class="c"><div class="tag">TRANSFORMING HEALTHCARE</div><h2>LifeLink Features</h2><p>Experience the future of healthcare with centralized data, symptom tracking, and direct communication with your healthcare team.</p><p>About us: at LifeLink we are committed to revolutionizing healthcare by creating seamless connections between patients and providers, ensuring everyone has access to the care they need.</p><div class="grid"><div class="card"><b>Centralized Health Data</b>Access all your vital health information in one place.</div><div class="card"><b>Symptom Tracking</b>Monitor your health and share updates with your provider.</div><div class="card"><b>Efficient Communication</b>Connect with healthcare professionals quickly and securely.</div><div class="card"><b>Mental Well-being</b>Accessible tools for a holistic approach to care.</div></div><div class="row"><a class="btn p" href="#my-health">Track symptoms in My Health</a></div></div></section>
+
+<section id="s6"><div class="c wide"><div class="tag">MEET OUR DEDICATED TEAM</div><h2>Healthcare Innovators</h2><p>Our team is committed to bridging the gap between patients and healthcare providers.</p><div class="team"><div><span class="av">JD</span><b>Dr. John Doe</b>Chief Medical Officer</div><div><span class="av">JS</span><b>Jane Smith</b>Lead Developer</div><div><span class="av">EJ</span><b>Emily Johnson</b>Product Manager</div><div><span class="av">MB</span><b>Michael Brown</b>Marketing Director</div></div><a class="btn s" href="#about">Meet The Team</a><h3>What Our Users Say</h3><div class="q">“LifeLink has revolutionized the way I manage my health data.”<small>Anna Lee · 34 years old · San Francisco</small></div><div class="q">“The communication features have made it so much easier to stay in touch with my doctor.”<small>James Taylor · 45 years old · Chicago</small></div></div></section>
+
+<section id="s7"><div class="c wide"><div class="tag">JOIN LIFELINK TODAY</div><h2>Take control of your health journey.</h2><p>Take control of your health journey with our innovative platform.</p><div class="row"><a class="btn p" href="#join">Sign Up Now</a><a class="btn s" href="#about">Learn More</a></div><p>Already a member? <a href="#join" style="color:#fff">Log in</a></p>
+<h3>LifeLink FAQs</h3><details><summary>How does LifeLink centralize health data?</summary><p>LifeLink integrates with various health systems to gather all your data in one secure location.</p></details><details><summary>Can I communicate with my healthcare provider through LifeLink?</summary><p>Yes, LifeLink allows you to send messages and updates directly to your healthcare team.</p></details><details><summary>Is my health information secure on LifeLink?</summary><p>Absolutely, we prioritize your privacy and use advanced security measures to protect your data.</p></details>
+<h3>Partner with Us</h3><p>Cutting-edge healthcare innovation. Join us in leading the future of healthcare and collaborate with industry leaders.</p><h3>Contact LifeLink Support</h3><div class="grid"><div class="card"><b>Office Hours</b>Monday–Friday, 8:00 am to 6:00 pm</div><div class="card"><b>Our Address</b>Wellness City</div><div class="card"><b>Jordan Fox</b>Head of Support</div><div class="card"><b>Casey Li</b>Technical Support Lead</div></div>
+<div class="stats"><div><strong data-n="30" data-suf="+">0</strong>countries</div><div><strong data-n="500" data-suf="+">0</strong>partners</div><div><strong data-n="30" data-suf="%">0</strong>annual growth</div></div>
+<div class="foot"><a href="#about">About Us</a><a href="#services">Our Services</a><a href="#privacy">Privacy Policy</a><a href="#terms">Terms &amp; Conditions</a><a href="#support">Support</a><br><br>© 2024 LifeLink. Empowering your health journey.</div></div></section>
+<div class="page" id="about"><div class="pw"><button class="x">✕ Close</button><div class="tag">ABOUT US</div><h1>Our Mission &amp; Vision</h1><p>At LifeLink, we are committed to revolutionizing healthcare by creating seamless connections between patients and providers, ensuring everyone has access to the care they need.</p>
+<div class="g4"><div class="card st"><strong data-n="30" data-suf="+">0</strong>Countries<small>Global reach</small></div><div class="card st"><strong data-n="500" data-suf="+">0</strong>Healthcare Partners</div><div class="card st"><strong data-n="1" data-suf="M+">0</strong>Users Empowered</div><div class="card st"><strong>24/7</strong>Support Hours</div></div>
+<h2>Innovative Healthcare Connectivity</h2><div class="tag">EMPOWER YOUR HEALTH</div><p>LifeLink is transforming healthcare by centralizing vital health data, tracking symptoms, and facilitating efficient communication with medical professionals, empowering users to manage their health journey.</p>
+<div class="g3"><div class="card"><b>Centralized Health Data</b>All your health information in one place, easily accessible and secure.</div><div class="card"><b>Efficient Communication</b>Stay connected with your healthcare providers through seamless messaging and updates.</div><div class="card"><b>Mental Well-being</b>Integrated features that support mental health for a holistic approach to wellness.</div></div><a class="btn p" href="#services">Discover More</a>
+<h2>Our Impact</h2><p>LifeLink's innovative platform has reached millions, improving healthcare outcomes worldwide.</p><div class="g3"><div class="card st"><strong data-n="1" data-suf="M+">0</strong>Active Users</div><div class="card st"><strong data-n="500" data-suf="+">0</strong>Healthcare Partners</div><div class="card st"><strong data-n="30" data-suf="+">0</strong>Countries Served</div></div>
+<h2>Meet Our Team</h2><p>The dedicated professionals behind LifeLink's success, committed to transforming healthcare.</p><div class="g3"><div class="card"><span class="av">AJ</span><b>Dr. Alex Johnson</b>CEO &amp; Founder</div><div class="card"><span class="av">EC</span><b>Emily Chen</b>CTO</div><div class="card"><span class="av">ML</span><b>Michael Lee</b>Head of Partnerships</div></div>
+<h2>Testimonials</h2><div class="g3"><div class="card"><b>Healthcare Innovation</b><em>“LifeLink has transformed the way we manage patient data, making communication seamless and efficient.”</em><small>Dr. Sarah Thompson · October 15, 2024</small></div><div class="card"><b>User Experience</b><em>“The platform is intuitive and user-friendly, providing easy access to vital health information.”</em><small>John Doe · September 22, 2024</small></div><div class="card"><b>Customer Support</b><em>“LifeLink's support team is responsive and knowledgeable, always ready to assist.”</em><small>Anna Smith · August 30, 2024</small></div></div>
+<h2>Partner with Us</h2><div class="tag">CUTTING-EDGE HEALTHCARE INNOVATION</div><p>Join us in leading the future of healthcare.</p><div class="g3"><div class="card st"><strong data-n="500" data-suf="+">0</strong>Partners Worldwide<small>Collaborate with industry leaders.</small></div><div class="card st"><strong data-n="30" data-suf="%">0</strong>Annual Growth<small>Be part of our success story.</small></div></div><a class="btn p" href="#contact">Get Involved</a><div class="foot"><a href="#about">About Us</a><a href="#services">Our Services</a><a href="#privacy">Privacy Policy</a><a href="#terms">Terms &amp; Conditions</a><a href="#support">Support</a><br><br>© 2024 LifeLink. Empowering your health journey.</div></div></div>
+<div class="page" id="contact"><div class="pw"><button class="x">✕ Close</button><div class="tag">CONNECTING HEALTH, EMPOWERING LIVES</div><h1>Reach Out to LifeLink</h1><p>Our team is here to support your health journey. Whether you have questions or need assistance, we're ready to help you connect with the healthcare resources you need.</p>
+<h2>Contact LifeLink Support</h2><p>We're dedicated to providing you with the best healthcare experience. Reach out to us with any questions or feedback you have.</p>
+<div class="g3"><div class="card"><b>Office Hours</b>Monday-Friday 8:00 am to 6:00 pm</div><div class="card"><b>Our Address</b>456 Health Ave. Wellness City, 67890</div><div class="card"><b>Contact Us</b>+1-800-HEALTH<br>+1-800-LINK</div></div>
+<input id="cn" placeholder="Your name"><input id="ce" type="email" placeholder="Email"><textarea id="cm" placeholder="How can we help?"></textarea><button class="btn p" id="cf">Send message</button>
+<h2>LifeLink Headquarters</h2><p>Visit our headquarters and explore the heart of where healthcare innovation thrives.</p><div class="map"><svg viewBox="0 0 600 220"><rect width="600" height="220" fill="#7a0c1e"/><g stroke="#ff9fb2" stroke-opacity=".35" stroke-width="3" fill="none"><path d="M0 70H600M0 150H600M120 0V220M300 0V220M470 0V220"/><path d="M0 200L600 20" stroke-opacity=".2"/></g><circle cx="300" cy="110" r="26" fill="#ff2d55" opacity=".25"><animate attributeName="r" values="12;34;12" dur="2.4s" repeatCount="indefinite"/></circle><circle cx="300" cy="110" r="9" fill="#fff"/><text x="318" y="106" fill="#fff" font-size="14" font-family="Sora,sans-serif">Wellness City</text><text x="318" y="124" fill="#ffd3da" font-size="11">456 Health Ave.</text></svg></div>
+<h2>Meet Our Support Team</h2><div class="g3"><div class="card"><b><span class="av">LA</span>Leslie Alexander</b>Co-Founder / CEO<em>With a passion for healthcare and innovation, Leslie leads LifeLink towards a future of connected health.</em></div><div class="card"><b><span class="av">JF</span>Jordan Fox</b>Head of Support<em>Jordan's expertise in customer service ensures that our users receive exceptional support.</em></div><div class="card"><b><span class="av">CL</span>Casey Li</b>Technical Support Lead<em>Casey's technical skills ensure that any platform issues are resolved swiftly and efficiently.</em></div></div>
+<h2>Support FAQs</h2><p>Find answers to frequently asked questions about LifeLink and how we can assist you.</p>
+<details><summary>How do I access my health data?</summary><p>You can access your health data by logging into your LifeLink account and navigating to the 'My Health' section.</p></details><details><summary>How can I contact my healthcare provider through LifeLink?</summary><p>You can contact your provider by using the messaging feature within your LifeLink account.</p></details><details><summary>Is my data secure with LifeLink?</summary><p>Yes, LifeLink uses advanced security measures to ensure your data is protected.</p></details><details><summary>What if I forget my password?</summary><p>Click on 'Forgot Password' on the login page to reset your password securely.</p></details>
+<p>Need more help? <a href="#contact" style="color:#fff">Contact our support</a></p>
+<h2>Join LifeLink Today</h2><p>Take control of your health journey with LifeLink. Connect with healthcare providers and access your health data with ease.</p><div class="row"><a class="btn p" href="#join">Get Started</a><a class="btn s" href="#contact">Contact Support</a></div><p>Already a member? <a href="#join" style="color:#fff">Log in</a></p><div class="foot"><a href="#about">About Us</a><a href="#services">Our Services</a><a href="#privacy">Privacy Policy</a><a href="#terms">Terms &amp; Conditions</a><a href="#support">Support</a><br><br>© 2024 LifeLink. Empowering your health journey.</div></div></div>
+<div class="page" id="join"><div class="pw narrow"><button class="x">✕ Close</button><div class="tag">JOIN LIFELINK TODAY</div><h1>Take control of your health journey.</h1><p>Connect with healthcare providers and access your health data with ease.</p>
+<div class="row"><button class="chip on" data-tab="up">Sign up</button><button class="chip" data-tab="in">Log in</button></div>
+<div id="f-up"><input id="su-n" placeholder="Full name"><input id="su-e" type="email" placeholder="Email"><input id="su-p" type="password" placeholder="Password (min 6 characters)"><button class="btn p" id="su">Create account</button></div>
+<div id="f-in" hidden><input id="li-e" type="email" placeholder="Email"><input id="li-p" type="password" placeholder="Password"><div class="row"><button class="btn p" id="li">Log in</button><a href="#" id="forgot" style="color:#fff;align-self:center;font-size:13px">Forgot Password?</a></div></div>
+<p class="note">Demo only: nothing is sent to a server. Details stay in your browser.</p><div class="foot"><a href="#about">About Us</a><a href="#services">Our Services</a><a href="#privacy">Privacy Policy</a><a href="#terms">Terms &amp; Conditions</a><a href="#support">Support</a><br><br>© 2024 LifeLink. Empowering your health journey.</div></div></div>
+<div class="page" id="services"><div class="pw"><button class="x">✕ Close</button><div class="tag">OUR SERVICES</div><h1>Everything in one connected platform.</h1><p>Experience the future of healthcare with centralized data, symptom tracking, and direct communication with your healthcare team.</p><div class="g4"><a class="card" href="#my-health"><b>Centralized Health Data</b>Access all your vital health information in one place.</a><a class="card" href="#my-health"><b>Symptom Tracking</b>Monitor your health and share updates with your provider.</a><a class="card" href="#my-health"><b>Efficient Communication</b>Secure messaging with your healthcare team.</a><a class="card" href="#my-health"><b>Mental Well-being</b>Mood check-ins and guided breathing.</a><a class="card" href="#s1"><b>Emergency Blood</b>Request matching donors and blood banks.</a><a class="card" href="#s2"><b>Organ Donation</b>Pledge, guidelines and donor card.</a><a class="card" href="#s3"><b>Labs &amp; Diagnostics</b>Book home sample collection.</a><a class="card" href="#s4"><b>Medicines</b>Prescriptions, reminders and refills.</a></div><div class="foot"><a href="#about">About Us</a><a href="#services">Our Services</a><a href="#privacy">Privacy Policy</a><a href="#terms">Terms &amp; Conditions</a><a href="#support">Support</a><br><br>© 2024 LifeLink. Empowering your health journey.</div></div></div>
+<div class="page" id="privacy"><div class="pw legal narrow"><button class="x">✕ Close</button><div class="tag">LEGAL</div><h1>Privacy Policy</h1><p>We prioritize your privacy and use advanced security measures to protect your data.</p><p>LifeLink integrates with various health systems to gather your data in one secure location. You decide what to share with your healthcare team.</p><p>Contact support at +1-800-HEALTH for any privacy request.</p><p class="note">Sample text for this demo. Replace it with your own legal copy before launch.</p><div class="foot"><a href="#about">About Us</a><a href="#services">Our Services</a><a href="#privacy">Privacy Policy</a><a href="#terms">Terms &amp; Conditions</a><a href="#support">Support</a><br><br>© 2024 LifeLink. Empowering your health journey.</div></div></div>
+<div class="page" id="terms"><div class="pw legal narrow"><button class="x">✕ Close</button><div class="tag">LEGAL</div><h1>Terms &amp; Conditions</h1><p>By using LifeLink you agree to use the platform responsibly and to provide accurate information.</p><p>LifeLink supports communication with your healthcare team. It does not replace professional medical advice or emergency care.</p><p class="note">Sample text for this demo. Replace it with your own legal copy before launch.</p><div class="foot"><a href="#about">About Us</a><a href="#services">Our Services</a><a href="#privacy">Privacy Policy</a><a href="#terms">Terms &amp; Conditions</a><a href="#support">Support</a><br><br>© 2024 LifeLink. Empowering your health journey.</div></div></div>
+<div class="page" id="my-health"><div class="pw"><button class="x">✕ Close</button><div class="tag">MY HEALTH</div><h1>Hello, <span id="hname">there</span>.</h1><p>All your vital health information in one place.</p>
+<div class="g4"><div class="card st"><strong id="hrv">72</strong>Heart rate · bpm<svg class="spark" viewBox="0 0 220 50"><polyline id="spark" points=""/></svg></div><div class="card st"><strong>118/76</strong>Blood pressure · mmHg</div><div class="card st"><strong>96</strong>Glucose · mg/dL</div><div class="card st"><strong>98%</strong>Blood oxygen</div></div>
+<div class="g3" style="grid-template-columns:1fr 1fr;align-items:start;margin-top:20px"><div><h3>Symptom Tracking</h3><div class="row" id="sym"><button class="chip">Headache</button><button class="chip">Fever</button><button class="chip">Cough</button><button class="chip">Fatigue</button><button class="chip">Nausea</button><button class="chip">Dizziness</button></div><p style="margin-bottom:6px">Severity: <b id="sevv">3</b>/10</p><input type="range" id="sev" min="1" max="10" value="3"><input id="note" placeholder="Add a note (optional)"><div class="row"><button class="btn p" id="logb">Log symptoms</button><button class="btn s" id="sharb">Share with provider</button></div><ul id="logs"></ul></div>
+<div><h3>Message Your Provider</h3><div class="chat" id="chat"></div><div class="sendrow"><input id="msg" placeholder="Type a message"><button class="btn p" id="send">Send</button></div></div></div>
+<h3>Mental Well-being</h3><div class="mood"><button title="Low">😞</button><button title="Okay">😐</button><button title="Good">🙂</button><button title="Great">😄</button></div><div class="bc" id="bc"></div><p id="bt" style="text-align:center">Breathe in…</p>
+<h3>Records</h3><div class="g3"><div class="card"><b>Blood count (CBC)</b>Report · 12 Oct</div><div class="card"><b>Prescription</b>Refill due · 2 Nov</div><div class="card"><b>Donor card</b>Pledge status: active</div></div><div class="row" style="margin-top:20px"><button class="btn s" id="lo">Log out</button></div><p class="note">Demo data only, not medical advice.</p><div class="foot"><a href="#about">About Us</a><a href="#services">Our Services</a><a href="#privacy">Privacy Policy</a><a href="#terms">Terms &amp; Conditions</a><a href="#support">Support</a><br><br>© 2024 LifeLink. Empowering your health journey.</div></div></div>
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+const W=()=>innerWidth,H=()=>innerHeight,BG=0xa30f24,PI=Math.PI;
+const scene=new THREE.Scene();scene.background=new THREE.Color(BG);scene.fog=new THREE.FogExp2(BG,.03);
+const cam=new THREE.PerspectiveCamera(42,W()/H(),.1,100);
+const ren=new THREE.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(W(),H());
+ren.toneMapping=THREE.ACESFilmicToneMapping;ren.toneMappingExposure=1.15;document.body.prepend(ren.domElement);
+scene.add(new THREE.AmbientLight(0xffd0d8,.9));
+const kl=new THREE.DirectionalLight(0xffffff,1.6);kl.position.set(4,6,7);scene.add(kl);
+[[0xffffff,70,-6,3,4],[0x5ff0ff,45,6,-3,3],[0xff6b8a,60,0,0,5]].forEach(a=>{const l=new THREE.PointLight(a[0],a[1],30);l.position.set(a[2],a[3],a[4]);scene.add(l)});
+const world=new THREE.Group();scene.add(world);
+const M=(c,o={})=>new THREE.MeshPhysicalMaterial(Object.assign({color:c,roughness:.3,clearcoat:1,clearcoatRoughness:.15,emissive:c,emissiveIntensity:.14},o));
+const GL=(c=0xffffff,o=.25)=>new THREE.MeshPhysicalMaterial({color:c,transparent:true,opacity:o,roughness:0,clearcoat:1,side:THREE.DoubleSide,depthWrite:false});
+const BAS=(c,o=1)=>new THREE.MeshBasicMaterial({color:c,transparent:o<1,opacity:o});
+const mesh=(g,m,x=0,y=0,z=0)=>{const a=new THREE.Mesh(g,m);a.position.set(x,y,z);return a};
+const G=[0,1,2,3,4,5].map(()=>{const g=new THREE.Group();world.add(g);return g});
+const bob=[];
+function put(i,o,x,y,z,s,amp=.15){o.position.set(x,y,z);o.scale.setScalar(s);o.userData.by=y;o.userData.ph=Math.random()*6;o.userData.amp=amp;G[i].add(o);bob.push(o);return o}
+function capGeo(r,len){const p=[];for(let i=0;i<=8;i++){const a=i/8*PI/2;p.push(new THREE.Vector2(r*Math.sin(a),-len/2-r*Math.cos(a)))}for(let i=8;i>=0;i--){const a=i/8*PI/2;p.push(new THREE.Vector2(r*Math.sin(a),len/2+r*Math.cos(a)))}return new THREE.LatheGeometry(p,28)}
+
+// REALISTIC ORGANS
+let sd=1;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
+const nz=(x,y,z)=>Math.sin(x*3.1+Math.sin(y*2.3))*Math.cos(y*3.7+Math.sin(z*2.9))*Math.sin(z*3.3+x*1.7)*.5+Math.sin(x*7.3+y*5.1)*Math.cos(z*6.7)*.25;
+function blob(seg,fn){const g=new THREE.SphereGeometry(1,seg,seg*.75|0),p=g.attributes.position,v=new THREE.Vector3();for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i);fn(v);p.setXYZ(i,v.x,v.y,v.z)}g.computeVertexNormals();return g}
+function ctex(w,h,draw){const mk=b=>{sd=7;const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),b,w,h);const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t};return{m:mk(0),b:mk(1)}}
+function cv(w,h,f){sd=3;const c=document.createElement('canvas');c.width=w;c.height=h;f(c.getContext('2d'),w,h);return new THREE.CanvasTexture(c)}
+const vessel=(pts,r,c,seg=24)=>mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(p=>new THREE.Vector3(...p))),seg,r,10),M(c,{emissiveIntensity:.1,roughness:.4}));
+const TM=ctex(512,512,(x,b,w,h)=>{x.fillStyle=b?'#808080':'#9c1426';x.fillRect(0,0,w,h);
+ for(let i=0;i<900;i++){const px=rnd()*w,py=rnd()*h,a=.5+rnd()*.6,l=20+rnd()*50;x.strokeStyle=b?(rnd()>.5?'rgba(210,210,210,.25)':'rgba(40,40,40,.25)'):(rnd()>.5?'rgba(190,40,50,.22)':'rgba(70,0,12,.22)');x.lineWidth=1+rnd()*2;x.beginPath();x.moveTo(px,py);x.lineTo(px+Math.cos(a)*l,py+Math.sin(a)*l);x.stroke()}
+ for(let i=0;i<30;i++){const px=rnd()*w,py=rnd()*h*.3,r=12+rnd()*32;x.fillStyle=b?'rgba(235,235,235,.5)':'rgba(238,198,120,.6)';x.beginPath();x.arc(px,py,r,0,7);x.fill()}
+ for(let i=0;i<16;i++){let px=rnd()*w,py=rnd()*h;x.strokeStyle=b?'rgba(20,20,20,.4)':'rgba(90,50,120,.35)';x.lineWidth=2;x.beginPath();x.moveTo(px,py);for(let k=0;k<6;k++){px+=(rnd()-.4)*40;py+=rnd()*30;x.lineTo(px,py)}x.stroke()}});
+const TL=ctex(512,512,(x,b,w,h)=>{x.fillStyle=b?'#909090':'#e39a9e';x.fillRect(0,0,w,h);
+ for(let i=0;i<1600;i++){const px=rnd()*w,py=rnd()*h,r=5+rnd()*13,q=rnd()>.5;x.fillStyle=b?(q?'rgba(235,235,235,.2)':'rgba(40,40,40,.2)'):(q?'rgba(214,126,136,.16)':'rgba(248,190,190,.16)');x.beginPath();x.arc(px,py,r,0,7);x.fill();if(b){x.strokeStyle='rgba(20,20,20,.25)';x.stroke()}}
+ for(let i=0;i<500;i++){x.fillStyle=b?'rgba(0,0,0,.3)':'rgba(88,70,86,.22)';x.fillRect(rnd()*w,rnd()*h,2,2)}});
+const TV=ctex(512,512,(x,b,w,h)=>{const g=x.createLinearGradient(0,0,w,h);g.addColorStop(0,b?'#888':'#7a2420');g.addColorStop(1,b?'#777':'#9c3e2e');x.fillStyle=g;x.fillRect(0,0,w,h);
+ for(let i=0;i<700;i++){const r=3+rnd()*7;x.fillStyle=b?'rgba(40,40,40,.15)':(rnd()>.5?'rgba(90,22,18,.14)':'rgba(176,90,68,.14)');x.beginPath();x.arc(rnd()*w,rnd()*h,r,0,7);x.fill()}
+ for(let i=0;i<40;i++){let px=rnd()*w,py=rnd()*h;x.strokeStyle=b?'rgba(200,200,200,.2)':'rgba(190,90,76,.25)';x.lineWidth=1;x.beginPath();x.moveTo(px,py);for(let k=0;k<8;k++){px+=(rnd()-.5)*50;py+=(rnd()-.5)*50;x.lineTo(px,py)}x.stroke()}});
+const hm=new THREE.MeshPhysicalMaterial({map:TM.m,bumpMap:TM.b,bumpScale:2.5,roughness:.4,clearcoat:.7,clearcoatRoughness:.25,emissive:0x5a0010,emissiveIntensity:.35});
+const LM=new THREE.MeshPhysicalMaterial({map:TV.m,bumpMap:TV.b,bumpScale:1,roughness:.3,clearcoat:.9,clearcoatRoughness:.2,emissive:0x2a0808,emissiveIntensity:.4});
+const KM=new THREE.MeshPhysicalMaterial({map:TV.m,bumpMap:TV.b,bumpScale:1,color:0xff9a8a,roughness:.28,clearcoat:1,emissive:0x2a0808,emissiveIntensity:.4});
+const LUM=new THREE.MeshPhysicalMaterial({map:TL.m,bumpMap:TL.b,bumpScale:1.8,roughness:.5,clearcoat:.4,transparent:true,opacity:.88,emissive:0x40101a,emissiveIntensity:.3});
+const BM=M(0xf5dcc2,{emissiveIntensity:.15});
+
+// HEART (anatomical)
+const hearts=[];let HC;
+const tfy=u=>1+Math.min(0,u)*.88;
+function surf(x,y){const u=y/1.25,t=tfy(u),ux=x/(.95*t),uz=Math.sqrt(Math.max(.02,1-ux*ux-u*u));return .85*t*uz+.035}
+function buildHeart(){const g=new THREE.Group(),h=new THREE.Group();
+ h.add(mesh(blob(72,v=>{const t=tfy(v.y);v.set(v.x*.95*t,v.y*1.25,v.z*.85*t);v.multiplyScalar(1+nz(v.x*2,v.y*2,v.z*2)*.03)}),hm));
+ h.add(mesh(blob(40,v=>{v.set(v.x*.46,v.y*.52,v.z*.4);v.multiplyScalar(1+nz(v.x*4,v.y*4,v.z*4)*.08)}),hm,-.68,.72,-.1));
+ h.add(mesh(blob(32,v=>{v.set(v.x*.3,v.y*.36,v.z*.26);v.multiplyScalar(1+nz(v.x*5,v.y*5,v.z*5)*.1)}),hm,.78,.78,.3));
+ const vm=M(0xc24a62,{roughness:.35,emissiveIntensity:.12}),ac=new THREE.CatmullRomCurve3([[.1,.8,.05],[.05,1.5,0],[-.3,2.05,-.1],[-.85,1.85,-.3],[-1,1.25,-.4]].map(p=>new THREE.Vector3(...p)));
+ h.add(mesh(new THREE.TubeGeometry(ac,40,.26,14),vm));
+ [.4,.52,.64].forEach(t=>{const p=ac.getPoint(t);h.add(vessel([[p.x,p.y,p.z],[p.x-.05,p.y+.3,p.z],[p.x-.08,p.y+.6,p.z]],.085,0xc24a62))});
+ h.add(vessel([[.2,.8,.55],[.05,1.5,.55],[-.2,1.8,.45]],.2,0xb05577));h.add(vessel([[-.2,1.8,.45],[-.7,2,.25],[-1.1,2.1,.1]],.14,0xb05577));h.add(vessel([[-.2,1.8,.45],[.4,2,.3],[.9,2.05,.2]],.14,0xb05577));
+ h.add(vessel([[-.7,1,-.1],[-.75,1.6,-.15],[-.7,2.2,-.2]],.17,0x4b6fb8));h.add(vessel([[-.6,.1,-.2],[-.6,-.5,-.25],[-.6,-1,-.25]],.16,0x4b6fb8));
+ const cor=(pts,r,c)=>h.add(vessel(pts.map(([x,y])=>[x,y,surf(x,y)]),r,c,40));
+ cor([[.12,.85],[.2,.4],[.28,-.1],[.2,-.6],[.04,-1.05]],.04,0xe0242c);cor([[.4,.8],[.75,.45],[.82,0],[.5,-.35]],.034,0xe0242c);
+ cor([[-.45,.85],[-.8,.4],[-.82,-.1],[-.45,-.45]],.036,0xe0242c);cor([[.18,.85],[.3,.4],[.38,-.1],[.3,-.6]],.028,0x5a5ac8);
+ h.rotation.z=.5;h.position.y=-.4;g.add(h);return g}
+function heart(){HC=HC||buildHeart();const g=HC.clone();g.userData={m:hm};hearts.push(g);return g}
+
+// LUNGS with bronchial tree
+function tree(g,p,d,len,r,n){if(n<=0)return;const e=p.clone().addScaledVector(d,len),c=new THREE.Mesh(new THREE.CylinderGeometry(r*.75,r,len,8),BM);c.position.copy(p.clone().add(e).multiplyScalar(.5));c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d);g.add(c);
+ for(let k=0;k<2;k++){const nd=d.clone().applyAxisAngle(new THREE.Vector3(rnd()-.5,rnd()-.5,1).normalize(),(k?1:-1)*(.4+rnd()*.35)).normalize();tree(g,e,nd,len*.74,r*.7,n-1)}}
+function lung(s){const g=new THREE.Group();
+ const lobe=(cx,cy,cz,sx,sy,sz)=>{const geo=blob(48,v=>{v.set(v.x*sx,v.y*sy,v.z*sz);let m=v.x*s;if(m>0)m*=.5;if(s<0&&m>0)m-=.3*Math.exp(-Math.pow((v.y+cy+.3)/.5,2));v.x=m*s;v.multiplyScalar(1+nz(v.x*2+cx,v.y*2,v.z*2)*.035)});g.add(mesh(geo,LUM,cx,cy,cz))};
+ if(s>0){lobe(0,.75,0,.85,.95,.6);lobe(.1,-.15,.1,.8,.45,.55);lobe(0,-.85,-.05,.9,.85,.62)}else{lobe(0,.7,0,.78,1,.6);lobe(0,-.7,-.05,.82,1,.62)}
+ tree(g,new THREE.Vector3(s*.45,.35,0),new THREE.Vector3(-s,-.25,0).normalize(),.7,.07,5);
+ g.add(vessel([[s*.45,.35,0],[s*.3,1.2,0],[s*.1,1.9,0]],.1,0xf0d9c0));return g}
+
+// LIVER + gallbladder
+function liver(){const g=new THREE.Group(),ss=t=>t*t*(3-2*t);
+ g.add(mesh(blob(72,v=>{const u=v.x,k=ss(Math.max(0,Math.min(1,(.9-u)/1.6)));let y=v.y*(.28+.62*k);if(v.y<0)y*=.55;v.set(u*1.8,y,v.z*(.45+.55*k));if(v.y>0)v.y-=.14*Math.exp(-Math.pow((u-.15)/.09,2));v.multiplyScalar(1+nz(v.x*1.5,v.y*1.5,v.z*1.5)*.03)}),LM));
+ g.add(mesh(blob(24,v=>v.set(v.x*.2,v.y*.38,v.z*.18)),M(0x5a8a3a,{roughness:.3}),-.9,-.6,.45));
+ g.add(vessel([[.1,-.4,.1],[-.1,-.9,.3],[-.2,-1.4,.3]],.09,0x4b6fb8));g.add(vessel([[.2,-.4,.15],[.1,-.85,.4],[0,-1.25,.45]],.05,0xd0303c));g.rotation.z=.1;return g}
+
+// KIDNEY
+function kidney(){const g=new THREE.Group();
+ g.add(mesh(blob(48,v=>{v.set(v.x*.5,v.y*.85,v.z*.4);if(v.x>0)v.x-=.3*Math.exp(-v.y*v.y/.12);v.multiplyScalar(1+nz(v.x*3,v.y*3,v.z*3)*.03)}),KM));
+ g.add(vessel([[.2,.05,0],[.45,.1,0],[.7,.15,.05]],.045,0xd0303c));g.add(vessel([[.2,-.05,0],[.45,-.1,0],[.7,-.15,.05]],.05,0x4b6fb8));g.add(vessel([[.2,-.1,0],[.3,-.6,0],[.15,-1.1,0]],.04,0xf0d9c0));return g}
+
+// EYE (sclera veins, iris fibers, clear cornea, optic nerve)
+const eyes=[];
+const TS=cv(512,256,(x,w,h)=>{x.fillStyle='#f3eee8';x.fillRect(0,0,w,h);for(let i=0;i<46;i++){let px=rnd()*w,py=rnd()*h;x.strokeStyle='rgba(200,40,50,'+(.15+rnd()*.25)+')';x.lineWidth=.8+rnd();x.beginPath();x.moveTo(px,py);for(let k=0;k<6;k++){px+=(rnd()-.5)*40;py+=(rnd()-.5)*30;x.lineTo(px,py)}x.stroke()}});
+const TI=cv(256,256,(x,w,h)=>{const c=w/2,g=x.createRadialGradient(c,c,8,c,c,c);g.addColorStop(0,'#2f6f4f');g.addColorStop(.55,'#4a9aa8');g.addColorStop(.9,'#1d4f66');g.addColorStop(1,'#071a24');x.fillStyle=g;x.fillRect(0,0,w,h);
+ for(let i=0;i<260;i++){const a=rnd()*6.283,r0=26+rnd()*20,r1=r0+30+rnd()*60;x.strokeStyle=rnd()>.5?'rgba(255,255,230,.22)':'rgba(0,20,30,.3)';x.lineWidth=1;x.beginPath();x.moveTo(c+Math.cos(a)*r0,c+Math.sin(a)*r0);x.lineTo(c+Math.cos(a)*r1,c+Math.sin(a)*r1);x.stroke()}x.fillStyle='#000';x.beginPath();x.arc(c,c,30,0,7);x.fill()});
+function eye(){const g=new THREE.Group(),cg=new THREE.SphereGeometry(.34,40,20,0,PI*2,0,1.15);cg.rotateX(PI/2);
+ g.add(mesh(new THREE.SphereGeometry(.6,48,32),new THREE.MeshPhysicalMaterial({map:TS,roughness:.3,clearcoat:1,clearcoatRoughness:.1})));
+ g.add(mesh(new THREE.CircleGeometry(.29,48),new THREE.MeshStandardMaterial({map:TI,roughness:.4}),0,0,.545));
+ g.add(mesh(cg,new THREE.MeshPhysicalMaterial({color:0xffffff,transparent:true,opacity:.18,roughness:0,clearcoat:1,depthWrite:false}),0,0,.4));
+ const on=mesh(new THREE.CylinderGeometry(.09,.11,.6,16),M(0xf2e0c8,{emissiveIntensity:.05}),0,0,-.8);on.rotation.x=PI/2;g.add(on);eyes.push(g);return g}
+
+// SCENE 0/1: HUMAN BODY (G0) + BLOOD CELLS (G1)
+const gM=new THREE.MeshPhysicalMaterial({color:0xffc2cc,transparent:true,opacity:.3,roughness:.1,clearcoat:1,emissive:0xff3b55,emissiveIntensity:.25,depthWrite:false});
+const wM=new THREE.MeshBasicMaterial({color:0xffe0e5,wireframe:true,transparent:true,opacity:.22});
+const body=new THREE.Group();
+function part(geo,x,y,z,sx=1,sy=1,sz=1,rz=0){const g=new THREE.Group();g.add(new THREE.Mesh(geo,gM),new THREE.Mesh(geo,wM));g.position.set(x,y,z);g.scale.set(sx,sy,sz);g.rotation.z=rz;body.add(g)}
+part(new THREE.SphereGeometry(.42,28,20),0,2.1,0,.95,1.1,1);part(capGeo(.15,.2),0,1.62,0);part(capGeo(.5,1.2),0,.68,0,1.15,1,.7);
+part(capGeo(.15,1.2),1.02,.72,0,1,1,1,.12);part(capGeo(.15,1.2),-1.02,.72,0,1,1,1,-.12);
+part(capGeo(.22,1.6),.3,-1.05,0);part(capGeo(.22,1.6),-.3,-1.05,0);
+const bh=heart();bh.scale.setScalar(.22);bh.position.set(.18,.95,.1);body.add(bh);
+const bl=lung(1);bl.scale.setScalar(.32);bl.position.set(-.42,.95,0);const br=lung(-1);br.scale.setScalar(.32);br.position.set(.42,.95,-.05);body.add(bl,br);
+body.scale.setScalar(1.05);G[0].add(body);
+
+const rp=[],N=36;for(let i=0;i<=N;i++){const t=i/N*.995;rp.push(new THREE.Vector2(t,-.55*Math.sqrt(1-t*t)*(.2072+2.0026*t*t-1.1228*t**4)*.9))}
+for(let i=N;i>=0;i--){const t=i/N*.995;rp.push(new THREE.Vector2(t,.55*Math.sqrt(1-t*t)*(.2072+2.0026*t*t-1.1228*t**4)*.9))}
+const rg=new THREE.LatheGeometry(rp,36),cells=[];
+[0xff3a55,0xff8aa0,0x6a0013,0xffb3c0].forEach((c,k)=>{const m=M(c,{emissiveIntensity:.35});
+  for(let i=0;i<9;i++){const a=mesh(rg,m);const s=.28+Math.random()*.28;a.scale.setScalar(s);a.userData={r:2+Math.random()*2.4,a:Math.random()*PI*2,v:(.12+Math.random()*.2)*(k%2?1:-1),y:(Math.random()-.5)*5,sp:Math.random()*.03};G[1].add(a);cells.push(a)}});
+const wbc=[];for(let i=0;i<4;i++){const a=mesh(new THREE.IcosahedronGeometry(.4,3),M(0xfff0d6,{transparent:true,opacity:.8,emissive:0xffc27a,emissiveIntensity:.3}));a.add(mesh(new THREE.SphereGeometry(.17,14,14),M(0x7a3cff,{emissiveIntensity:.6})));a.userData={r:2.4+i*.5,a:i*1.6,v:.15,y:(i-1.5)*1.2,sp:.01};G[1].add(a);cells.push(a)}
+const dp=[];for(let i=0;i<=30;i++){const t=i/30;dp.push(new THREE.Vector2(.85*Math.sin(PI*Math.pow(t,.55))*(1-t*.4),-1+2.2*t))}
+const dropG=new THREE.LatheGeometry(dp,32),dropM=M(0xd0001f,{emissive:0xff1030,emissiveIntensity:.5});
+put(1,mesh(dropG,dropM),3.1,1.3,1,.7,.2);put(1,mesh(dropG,dropM),-3.2,-1,1.2,.45,.2);
+
+// SCENE 2: ORGANS
+const mh=heart();put(2,mh,0,.1,0,1.05,.1);put(2,lung(1),-2.9,.5,-.5,1,.1);put(2,lung(-1),2.9,.5,-.5,1,.1);put(2,liver(),-1.5,-2.5,.3,.8,.1);
+put(2,kidney(),1.6,-2.4,.3,1,.1);put(2,kidney(),2.7,-2.7,.5,.9,.1);put(2,eye(),-1.3,2.6,.4,.8,.1);put(2,eye(),1.3,2.6,.4,.8,.1);
+
+// SCENE 3: LABS
+const rack=new THREE.Group();rack.add(mesh(new THREE.BoxGeometry(2.3,.1,.5),M(0xffffff),0,-.6,0),mesh(new THREE.BoxGeometry(2.3,.08,.5),M(0xffffff),0,-.05,0));
+[0xff2d55,0x5ff0ff,0xffb03a,0xd946ef,0x7dffb0].forEach((c,i)=>{const t=new THREE.Group();
+  t.add(mesh(new THREE.CylinderGeometry(.15,.15,1.1,18,1,true),GL()),mesh(new THREE.SphereGeometry(.15,18,8,0,PI*2,PI/2,PI/2),GL(0xffffff,.3),0,-.55,0),mesh(new THREE.CylinderGeometry(.13,.13,.55,18),BAS(c,.85),0,-.25,0),mesh(new THREE.SphereGeometry(.13,14,8,0,PI*2,PI/2,PI/2),BAS(c,.85),0,-.525,0));
+  t.position.set(-.9+i*.45,.1,0);t.rotation.z=(i-2)*.04;rack.add(t)});
+put(3,rack,0,-.3,0,1.8,.1);
+function syr(){const g=new THREE.Group();g.add(mesh(new THREE.CylinderGeometry(.15,.15,1.2,22,1,true),GL(0xffffff,.35)),mesh(new THREE.CylinderGeometry(.13,.13,.7,22),BAS(0xff2d55,.9),0,-.25,0),mesh(new THREE.CylinderGeometry(.04,.04,.8,10),M(0xffffff),0,.9,0),mesh(new THREE.CylinderGeometry(.22,.22,.05,22),M(0xffffff),0,1.3,0),mesh(new THREE.BoxGeometry(.55,.05,.2),M(0xffffff),0,.6,0),mesh(new THREE.CylinderGeometry(.04,.1,.25,12),M(0x5ff0ff),0,-.72,0),mesh(new THREE.CylinderGeometry(.015,.015,.9,8),M(0xdddddd,{metalness:.8}),0,-1.3,0));return g}
+[[-2.6,.9,.6,.9],[2.7,1.9,.3,-.8],[-2.2,-1.9,.8,.5]].forEach(a=>{const s=syr();s.rotation.z=a[3];put(3,s,a[0],a[1],a[2],1,.15)});
+function beaker(c){const g=new THREE.Group();g.add(mesh(new THREE.CylinderGeometry(.5,.45,1.3,28,1,true),GL(0xffffff,.22)),mesh(new THREE.CylinderGeometry(.44,.4,.7,28),BAS(c,.65),0,-.28,0));return g}
+put(3,beaker(0x5ff0ff),2.5,-1.8,.5,1.1);put(3,beaker(0xffd166),-1.2,2.5,-.4,1);
+const petri=new THREE.Group();petri.add(mesh(new THREE.CylinderGeometry(.7,.7,.14,32),GL(0xffffff,.3)),mesh(new THREE.CylinderGeometry(.6,.6,.06,32),BAS(0xff9aaa,.8),0,-.02,0));petri.rotation.x=.9;put(3,petri,1.6,2.3,0,1);
+const dna=new THREE.Group();for(let i=0;i<26;i++){const t=i*.38,y=(i-13)*.2;const a=mesh(new THREE.SphereGeometry(.09,10,10),BAS(0x5ff0ff),Math.cos(t),y,Math.sin(t)),b=mesh(new THREE.SphereGeometry(.09,10,10),BAS(0xffffff),-Math.cos(t),y,-Math.sin(t));const r=mesh(new THREE.CylinderGeometry(.015,.015,2,6),BAS(0xffd3da,.5),0,y,0);r.rotation.z=PI/2;r.rotation.y=-t;dna.add(a,b,r)}
+put(3,dna,3.4,-.2,-1,.55,.1);
+
+// SCENE 4: MEDICINES
+function pill(c1,c2){const g=new THREE.Group(),r=.22,L=.5;
+  g.add(mesh(new THREE.CylinderGeometry(r,r,L/2,22),M(c1),0,-L/4,0),mesh(new THREE.SphereGeometry(r,22,12,0,PI*2,PI/2,PI/2),M(c1),0,-L/2,0),mesh(new THREE.CylinderGeometry(r,r,L/2,22),M(c2),0,L/4,0),mesh(new THREE.SphereGeometry(r,22,12,0,PI*2,0,PI/2),M(c2),0,L/2,0));return g}
+function tab(c){const g=new THREE.Group();g.add(mesh(new THREE.CylinderGeometry(.3,.3,.13,32),M(c)),mesh(new THREE.BoxGeometry(.5,.02,.03),BAS(0x000000,.25),0,.07,0));return g}
+const bottle=new THREE.Group();bottle.add(mesh(new THREE.CylinderGeometry(.7,.7,1.7,32),GL(0xffb347,.6),0,0,0),mesh(new THREE.CylinderGeometry(.72,.72,.35,32),M(0xffffff),0,1.0,0),mesh(new THREE.CylinderGeometry(.71,.71,.7,32,1,true),M(0xffffff,{side:THREE.DoubleSide}),0,0,0),mesh(new THREE.BoxGeometry(.5,.22,.02),BAS(0xe0102c),0,.05,.72));
+put(4,bottle,0,-.1,0,1.5,.1);
+const meds=[];const cols=[[0xffffff,0xff2d55],[0xffffff,0x5ff0ff],[0xffd166,0xffffff],[0xff8aa0,0xffffff]];
+for(let i=0;i<30;i++){const o=i%3?pill(...cols[i%4]):tab([0xffffff,0xffd166,0xff9aaa,0x9be7ff][i%4]);o.scale.setScalar(.9+Math.random()*.6);
+  o.userData={r:2.2+Math.random()*2,a:Math.random()*PI*2,v:(.2+Math.random()*.3)*(i%2?1:-1),y:(Math.random()-.5)*4.2,sp:.01+Math.random()*.02,tl:Math.random()*.5};G[4].add(o);meds.push(o)}
+
+// EXTRAS
+let zK=1;const ZS=[10.5,9.2,10.5,10,10.5,11.5];bh.userData.s=.22;mh.userData.s=1.05;
+const gc=document.createElement('canvas');gc.width=gc.height=128;const gx=gc.getContext('2d'),gr=gx.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,'rgba(255,255,255,.9)');gr.addColorStop(.3,'rgba(255,120,140,.45)');gr.addColorStop(1,'rgba(255,60,90,0)');gx.fillStyle=gr;gx.fillRect(0,0,128,128);
+const gtex=new THREE.CanvasTexture(gc),glows=[];
+function glow(i,x,y,z,s,c=0xff6b8a){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:gtex,color:c,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));sp.position.set(x,y,z);sp.scale.setScalar(s);G[i].add(sp);glows.push(sp)}
+glow(0,.2,.95,-.3,3.2);glow(1,0,0,-1.5,9,0xff4060);glow(2,0,0,-.8,7);glow(3,0,0,-1.5,8,0x5ff0ff);glow(4,0,0,-1.5,8,0xffd166);glow(5,0,0,-1,8);
+const ripples=[];function ripple(i,s){for(let k=0;k<3;k++){const r=mesh(new THREE.TorusGeometry(1,.012,8,64),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,depthWrite:false}));r.userData={k:k/3,s,gi:i};G[i].add(r);ripples.push(r)}}
+ripple(2,3.2);ripple(5,3);
+const cp=[];for(let i=0;i<=40;i++){const t=i/40,a=t*PI*6;cp.push(new THREE.Vector3(Math.cos(a)*(1.5+Math.sin(t*PI)*.5),-2.3+t*4.8,Math.sin(a)*(1.1+Math.sin(t*PI)*.4)))}
+const curve=new THREE.CatmullRomCurve3(cp),sm1=M(0xff3a55,{emissiveIntensity:.5}),stream=[];
+G[1].add(mesh(new THREE.TubeGeometry(curve,160,.03,6),BAS(0xffe0e5,.25)));
+for(let i=0;i<46;i++){const c=mesh(rg,sm1);c.scale.setScalar(.17);c.userData.o=i/46;G[1].add(c);stream.push(c)}
+const NN=34,nodes=[];for(let i=0;i<NN;i++){const y=1-i/(NN-1)*2,r=Math.sqrt(1-y*y),a=i*2.399963;nodes.push(new THREE.Vector3(Math.cos(a)*r,y,Math.sin(a)*r).multiplyScalar(2.9))}
+const net=new THREE.Group(),ls=[],edges=[];
+nodes.forEach((n,i)=>{net.add(mesh(new THREE.SphereGeometry(i%5?.09:.16,12,12),BAS(0xffffff),n.x,n.y,n.z));for(let j=i+1;j<NN;j++)if(n.distanceTo(nodes[j])<1.9){ls.push(n.x,n.y,n.z,nodes[j].x,nodes[j].y,nodes[j].z);edges.push([n,nodes[j]])}});
+const lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.Float32BufferAttribute(ls,3));net.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0xffd3da,transparent:true,opacity:.4})));
+const pulses=[];for(let i=0;i<26;i++){const m=mesh(new THREE.SphereGeometry(.07,10,10),BAS(0x5ff0ff));m.userData={e:edges[(i*7)%edges.length],t:Math.random(),v:.004+Math.random()*.006};net.add(m);pulses.push(m)}
+G[5].add(net);const nh=heart();nh.userData.s=.8;nh.scale.setScalar(.8);G[5].add(nh);
+const pc=500,pp=new Float32Array(pc*3);for(let i=0;i<pc;i++){pp[i*3]=(Math.random()-.5)*28;pp[i*3+1]=(Math.random()-.5)*18;pp[i*3+2]=-10+Math.random()*16}
+const pg=new THREE.BufferGeometry();pg.setAttribute('position',new THREE.BufferAttribute(pp,3));const parts=new THREE.Points(pg,new THREE.PointsMaterial({color:0xffd3da,size:.05,transparent:true,opacity:.7}));scene.add(parts);
+
+// control
+let target=0,ps=0,mx=0,my=0,time=0;
+const secs=[...document.querySelectorAll('section')],dots=[...document.querySelectorAll('.dots b')];
+let tops=[];function onS(){const y=scrollY;let i=0;for(let k=0;k<tops.length;k++)if(y>=tops[k]-1)i=k;const n=tops[i+1];target=n?i+Math.min(1,(y-tops[i])/(n-tops[i])):i;document.querySelector('.bar').style.width=(y/Math.max(1,document.body.scrollHeight-H())*100)+'%'}
+function calc(){tops=secs.map(s=>s.offsetTop);onS()}
+addEventListener('scroll',onS,{passive:true});addEventListener('resize',calc);addEventListener('load',calc);setTimeout(calc,50);
+addEventListener('pointermove',e=>{mx=e.clientX/W()*2-1;my=e.clientY/H()*2-1});
+function layout(){const m=W()<760;cam.aspect=W()/H();zK=m?1.43:1;world.position.set(m?0:3.3,m?1.6:0,0);world.scale.setScalar(m?.85:.92);cam.updateProjectionMatrix();ren.setSize(W(),H())}
+addEventListener('resize',layout);layout();
+const sm=x=>x*x*(3-2*x);
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');e.target.querySelectorAll('[data-n]').forEach(n=>{if(n.dataset.d)return;n.dataset.d=1;const T=+n.dataset.n,t0=performance.now();(function f(){const k=Math.min(1,(performance.now()-t0)/1400);n.textContent=(n.dataset.pre||'')+Math.round(T*sm(k)).toLocaleString()+(n.dataset.suf||'');if(k<1)requestAnimationFrame(f)})()})}}),{threshold:.08});
+secs.forEach(s=>io.observe(s));
+
+// UI
+const toast=document.getElementById('toast');
+function say(t){toast.textContent=t;toast.classList.add('on');clearTimeout(say.t);say.t=setTimeout(()=>toast.classList.remove('on'),2600)}
+document.querySelectorAll('#groups .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#groups .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on')});
+const sel=()=>document.querySelector('#groups .on').textContent;
+document.getElementById('req').onclick=()=>say('Request for '+sel()+' sent to 42 nearby donors (demo)');
+document.getElementById('pledge').onclick=()=>say('Thank you! Your pledge was recorded (demo)');
+document.getElementById('guide').onclick=()=>say('Guidelines page would open here (demo)');
+document.getElementById('lab').onclick=()=>say('Home sample collection requested (demo)');
+document.getElementById('rx').onclick=()=>say('Prescription upload would open here (demo)');
+document.getElementById('rem').onclick=()=>say('Dose reminders enabled (demo)');
+
+document.querySelectorAll('[data-say]').forEach(e=>e.addEventListener('click',ev=>{ev.preventDefault();say(e.dataset.say)}));
+document.querySelectorAll('.btn').forEach(b=>{b.addEventListener('pointermove',e=>{const r=b.getBoundingClientRect();b.style.transform='translate('+(e.clientX-r.left-r.width/2)*.12+'px,'+(e.clientY-r.top-r.height/2)*.22+'px)'});b.addEventListener('pointerleave',()=>b.style.transform='')});
+// SITE
+let user=null;try{user=JSON.parse(localStorage.getItem('ll_user')||'null')}catch(_){}
+const $=id=>document.getElementById(id),pages=[...document.querySelectorAll('.page')],nav=document.querySelector('nav'),nmh=$('nav-mh'),AL={support:'contact'};
+function cu(n){const T=+n.dataset.n,t0=performance.now();(function f(){const k=Math.min(1,(performance.now()-t0)/1400);n.textContent=(n.dataset.pre||'')+Math.round(T*sm(k)).toLocaleString()+(n.dataset.suf||'');if(k<1)requestAnimationFrame(f)})()}
+function show(id){id=AL[id]||id;let p=pages.find(x=>x.id===id);if(p&&id==='my-health'&&!user){p=$('join');say('Please sign up or log in to open My Health')}
+ pages.forEach(x=>x.classList.toggle('open',x===p));document.body.style.overflow=p?'hidden':'';nav.classList.remove('m');
+ if(p){p.scrollTop=0;p.querySelectorAll('[data-n]').forEach(cu);if(p.id==='my-health')dash()}}
+document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const id=a.getAttribute('href').slice(1);if(!id)return;
+ if(pages.some(x=>x.id===(AL[id]||id))){e.preventDefault();show(id);try{history.replaceState(null,'','#'+id)}catch(_){}}
+ else if($(id)){e.preventDefault();show(null);$(id).scrollIntoView({behavior:'smooth'})}});
+document.querySelectorAll('.x').forEach(b=>b.onclick=()=>show(null));
+addEventListener('keydown',e=>{if(e.key==='Escape')show(null)});
+document.querySelector('.burger').onclick=()=>nav.classList.toggle('m');
+function setUser(u){user=u;try{u?localStorage.setItem('ll_user',JSON.stringify(u)):localStorage.removeItem('ll_user')}catch(_){}nmh.hidden=!u}
+nmh.hidden=!user;
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('on',x===b));$('f-up').hidden=b.dataset.tab!=='up';$('f-in').hidden=b.dataset.tab!=='in'});
+const okMail=v=>/\S+@\S+\.\S+/.test(v);
+$('su').onclick=()=>{const n=$('su-n').value.trim(),e=$('su-e').value.trim();if(!n||!okMail(e)||$('su-p').value.length<6)return say('Enter your name, a valid email and a 6+ character password');setUser({name:n,email:e});say('Welcome to LifeLink, '+n.split(' ')[0]+'!');show('my-health')};
+$('li').onclick=()=>{const e=$('li-e').value.trim();if(!okMail(e)||$('li-p').value.length<6)return say('Enter a valid email and password');setUser({name:(user&&user.name)||e.split('@')[0],email:e});say('Logged in (demo)');show('my-health')};
+$('forgot').onclick=e=>{e.preventDefault();say('Password reset link sent (demo)')};
+$('lo').onclick=()=>{setUser(null);show(null);say('You are logged out')};
+$('cf').onclick=()=>{if(!$('cn').value.trim()||!okMail($('ce').value.trim())||!$('cm').value.trim())return say('Please add your name, a valid email and a message');say('Message sent. We reply within one business day (demo)');['cn','ce','cm'].forEach(i=>$(i).value='')};
+let hr=[72,74,71,73,75,72,70,72],logs=[],msgs=[['p','Hello! How are you feeling today?']],symSel=new Set();
+function drawHR(){const w=220,h=50,mx=Math.max(...hr),mn=Math.min(...hr);$('spark').setAttribute('points',hr.map((v,i)=>(i/(hr.length-1)*w)+','+(h-(v-mn)/(mx-mn||1)*(h-8)-4)).join(' '));$('hrv').textContent=hr[hr.length-1]}
+function renderLogs(){const u=$('logs');u.textContent='';(logs.length?logs:['No entries yet.']).forEach(t=>{const l=document.createElement('li');l.textContent=t;u.appendChild(l)})}
+function renderChat(){const c=$('chat');c.textContent='';msgs.forEach(m=>{const d=document.createElement('div');d.className='msg '+m[0];d.textContent=m[1];c.appendChild(d)});c.scrollTop=c.scrollHeight}
+function dash(){$('hname').textContent=user?user.name.split(' ')[0]:'there';drawHR();renderLogs();renderChat()}
+function reply(){setTimeout(()=>{msgs.push(['p',"Thanks, I've received your update. I'll review it and get back to you shortly."]);renderChat()},1300)}
+setInterval(()=>{hr.push(Math.round(68+Math.random()*10));hr.shift();if($('my-health').classList.contains('open'))drawHR()},1200);
+document.querySelectorAll('#sym .chip').forEach(c=>c.onclick=()=>{c.classList.toggle('on');c.classList.contains('on')?symSel.add(c.textContent):symSel.delete(c.textContent)});
+$('sev').oninput=()=>$('sevv').textContent=$('sev').value;
+$('logb').onclick=()=>{if(!symSel.size)return say('Select at least one symptom');const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),n=$('note').value.trim();logs.unshift(t+' · '+[...symSel].join(', ')+' · severity '+$('sev').value+'/10'+(n?' · '+n:''));renderLogs();say('Symptoms logged')};
+$('sharb').onclick=()=>{if(!logs.length)return say('Log your symptoms first');msgs.push(['u','Symptom update: '+logs[0]]);renderChat();reply();say('Shared with your provider (demo)')};
+$('send').onclick=()=>{const v=$('msg').value.trim();if(!v)return;msgs.push(['u',v]);$('msg').value='';renderChat();reply()};
+$('msg').onkeydown=e=>{if(e.key==='Enter')$('send').click()};
+document.querySelectorAll('.mood button').forEach(b=>b.onclick=()=>say('Mood saved: '+b.title));
+let bth=0;function breathe(){bth^=1;$('bc').classList.toggle('big',bth);$('bt').textContent=bth?'Breathe in…':'Breathe out…'}setTimeout(breathe,300);setInterval(breathe,4000);
+{const h=location.hash.slice(1);if(pages.some(x=>x.id===(AL[h]||h)))show(h)}
+
+const clock=new THREE.Clock();
+(function loop(){requestAnimationFrame(loop);
+  time=clock.getElapsedTime();ps+=(target-ps)*.07;const p=ps;
+  const w=i=>sm(Math.max(0,Math.min(1,1-Math.abs(p-i)*1.35)));
+  const wb=p<=1?1:sm(Math.max(0,1-(p-1)*1.35));
+  const ws=[wb,w(1),w(2),w(3),w(4),p>=5?1:w(5)];
+  G.forEach((g,i)=>{const k=ws[i];g.visible=k>.01;g.scale.setScalar(Math.max(.001,k));g.position.y=(Math.min(p,5)-i)*(i<2?.4:1.3);if(i>=2)g.rotation.y=(Math.min(p,5)-i)*1.1+Math.sin(time*.3)*.25});
+  body.rotation.y=Math.sin(time*.5)*.5+p*.8;
+  G[5].position.x=.9;const vel=target-ps;world.rotation.z+=(vel*.1-world.rotation.z)*.1;G[1].rotation.y=time*.15+p*.5;
+  ripples.forEach(r=>{const u=r.userData,k=(time*.5+u.k)%1;r.scale.setScalar(.6+k*u.s*.9);r.material.opacity=(1-k)*.4*ws[u.gi]});
+  glows.forEach((g,i)=>{g.material.opacity=.5+Math.sin(time*2.2+i)*.12});
+  stream.forEach(c=>{c.position.copy(curve.getPointAt((c.userData.o+time*.05)%1));c.rotation.x+=.05;c.rotation.y+=.03});
+  net.rotation.y=time*.12+p*.4;
+  pulses.forEach(m=>{const u=m.userData;u.t+=u.v;if(u.t>1){u.t=0;u.e=edges[Math.floor(Math.random()*edges.length)]}m.position.lerpVectors(u.e[0],u.e[1],u.t)});
+  parts.rotation.y=time*.02;parts.position.y=p*.6;
+  bob.forEach(o=>{o.position.y=o.userData.by+Math.sin(time*.8+o.userData.ph)*o.userData.amp;o.rotation.y+=.004});
+  const b=Math.pow(Math.max(0,Math.sin(time*4.4)),10)*.09+Math.pow(Math.max(0,Math.sin(time*4.4-.9)),10)*.05;
+  hearts.forEach(h=>{h.scale.setScalar((h.userData.s||1)*(1+b));h.userData.m.emissiveIntensity=.35+b*3});
+  eyes.forEach(e=>{e.rotation.y+=(mx*.7-e.rotation.y)*.08;e.rotation.x+=(my*.5-e.rotation.x)*.08});
+  cells.forEach(c=>{const u=c.userData;u.a+=u.v*.016;c.position.set(Math.cos(u.a+p*.8)*u.r,u.y+Math.sin(time+u.a)*.3,Math.sin(u.a+p*.8)*u.r*.7);c.rotation.x+=u.sp;c.rotation.y+=u.sp});
+  meds.forEach(c=>{const u=c.userData;u.a+=u.v*.016;const a=u.a+p*1.2;c.position.set(Math.cos(a)*u.r,u.y+Math.sin(a*2)*.35,Math.sin(a)*u.r*.7);c.rotation.x+=u.sp;c.rotation.z+=u.sp*1.3});
+  const i=Math.round(Math.max(0,Math.min(secs.length-1,p)));dots.forEach((d,k)=>d.classList.toggle('on',k===i));
+  const k5=Math.min(5,p),i0=Math.floor(k5),f5=sm(k5-i0);cam.position.z=(ZS[i0]*(1-f5)+ZS[Math.min(5,i0+1)]*f5)*zK;
+  cam.position.x+=(mx*.8-cam.position.x)*.04;cam.position.y+=(-my*.5-cam.position.y)*.04;cam.lookAt(0,0,0);
+  ren.render(scene,cam)})();
+})();
+</script>
+</body>
+</html>
